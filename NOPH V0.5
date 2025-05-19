@@ -1,0 +1,160 @@
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local Title = Instance.new("TextLabel")
+
+ScreenGui.Name = "NophHub"
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 250, 0, 300)
+MainFrame.Active = true
+MainFrame.Draggable = true
+UICorner.Parent = MainFrame
+
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Font = Enum.Font.GothamBlack
+Title.Text = "NOPH HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 25
+
+local function makeButton(name, posY, text, func)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Parent = MainFrame
+	btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	btn.Position = UDim2.new(0.1, 0, 0, posY)
+	btn.Size = UDim2.new(0.8, 0, 0, 40)
+	btn.Font = Enum.Font.Gotham
+	btn.Text = text
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.TextSize = 18
+	btn.MouseButton1Click:Connect(func)
+	Instance.new("UICorner", btn)
+	return btn
+end
+
+local flyActive = false
+local bg, bv, flyConn
+
+local function toggleFly()
+	local player = game.Players.LocalPlayer
+	local char = player.Character or player.CharacterAdded:Wait()
+	local root = char:WaitForChild("HumanoidRootPart")
+	local cam = workspace.CurrentCamera
+	local UIS = game:GetService("UserInputService")
+
+	if not flyActive then
+		bg = Instance.new("BodyGyro", root)
+		bg.P = 9e4
+		bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+		bg.CFrame = root.CFrame
+
+		bv = Instance.new("BodyVelocity", root)
+		bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+		bv.Velocity = Vector3.zero
+
+		flyConn = game:GetService("RunService").RenderStepped:Connect(function()
+			local move = Vector3.zero
+			if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
+			if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
+			if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
+			if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
+			if UIS:IsKeyDown(Enum.KeyCode.Space) then move += cam.CFrame.UpVector end
+			if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= cam.CFrame.UpVector end
+
+			bv.Velocity = move.Magnitude > 0 and move.Unit * 50 or Vector3.zero
+			bg.CFrame = cam.CFrame
+		end)
+
+		flyActive = true
+	else
+		flyActive = false
+		if flyConn then flyConn:Disconnect() end
+		if bg then bg:Destroy() end
+		if bv then bv:Destroy() end
+	end
+end
+
+local jumpActive = false
+local jumpConn
+
+local function toggleInfJump()
+	local plr = game.Players.LocalPlayer
+	local UIS = game:GetService("UserInputService")
+
+	if not jumpActive then
+		jumpConn = UIS.JumpRequest:Connect(function()
+			local humanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				humanoid:ChangeState("Jumping")
+			end
+		end)
+		jumpActive = true
+	else
+		if jumpConn then jumpConn:Disconnect() end
+		jumpActive = false
+	end
+end
+
+local espActive = false
+local function toggleESP()
+	local players = game:GetService("Players")
+	local localPlayer = players.LocalPlayer
+
+	if not espActive then
+		for _, p in pairs(players:GetPlayers()) do
+			if p ~= localPlayer and p.Character and p.Character:FindFirstChild("Head") then
+				if not p.Character.Head:FindFirstChild("NophESP") then
+					local esp = Instance.new("BillboardGui", p.Character.Head)
+					esp.Name = "NophESP"
+					esp.Size = UDim2.new(0, 100, 0, 40)
+					esp.AlwaysOnTop = true
+					local label = Instance.new("TextLabel", esp)
+					label.Text = p.Name
+					label.Size = UDim2.new(1, 0, 1, 0)
+					label.TextColor3 = Color3.new(1, 0, 0)
+					label.BackgroundTransparency = 1
+					label.Font = Enum.Font.GothamBold
+					label.TextScaled = true
+				end
+			end
+		end
+		espActive = true
+	else
+		for _, p in pairs(players:GetPlayers()) do
+			if p ~= localPlayer and p.Character and p.Character:FindFirstChild("Head") then
+				local esp = p.Character.Head:FindFirstChild("NophESP")
+				if esp then esp:Destroy() end
+			end
+		end
+		espActive = false
+	end
+end
+
+local function enableFling()
+	local char = game.Players.LocalPlayer.Character
+	local HRP = char and char:FindFirstChild("HumanoidRootPart")
+	if HRP then
+		local bv = Instance.new("BodyVelocity", HRP)
+		bv.Velocity = Vector3.new(9999, 9999, 9999)
+		bv.MaxForce = Vector3.new(999999, 999999, 999999)
+		wait(1)
+		bv:Destroy()
+	end
+end
+
+makeButton("FlyButton", 60, "Fly", toggleFly)
+makeButton("JumpButton", 110, "Infinite Jump", toggleInfJump)
+makeButton("ESPButton", 160, "ESP", toggleESP)
+makeButton("FlingButton", 210, "Fling", enableFling)
+
+print("NOPH Hub Loaded!")
