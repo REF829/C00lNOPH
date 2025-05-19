@@ -68,8 +68,6 @@ local function toggleFly()
 			if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
 			if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
 			if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
-			if UIS:IsKeyDown(Enum.KeyCode.Space) then move += cam.CFrame.UpVector end
-			if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= cam.CFrame.UpVector end
 
 			bv.Velocity = move.Magnitude > 0 and move.Unit * 50 or Vector3.zero
 			bg.CFrame = cam.CFrame
