@@ -84,6 +84,7 @@ end
 
 local jumpActive = false
 local jumpConn
+local canJump = true  -- Flag to prevent holding spacebar for continuous jumps
 
 local function toggleInfJump()
 	local plr = game.Players.LocalPlayer
@@ -93,7 +94,22 @@ local function toggleInfJump()
 		jumpConn = UIS.JumpRequest:Connect(function()
 			local humanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 			if humanoid then
-				humanoid:ChangeState("Jumping")
+				local state = humanoid:GetState()
+
+				-- Allow jumping if the humanoid is not already jumping or falling
+				if state == Enum.HumanoidStateType.Seated or state == Enum.HumanoidStateType.Climbing then
+					return  -- Prevent jumping while seated or climbing
+				end
+
+				-- Only trigger the jump if not already in mid-jump/falling (to avoid endless spamming)
+				if canJump then
+					humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+					canJump = false
+
+					-- Prevent another jump until cooldown finishes (0.1 sec is a reasonable cooldown)
+					wait(0.1)
+					canJump = true
+				end
 			end
 		end)
 		jumpActive = true
