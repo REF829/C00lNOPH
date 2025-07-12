@@ -63,6 +63,9 @@ local function toggleFly()
 		bv.Velocity = Vector3.zero
 
 		flyConn = game:GetService("RunService").RenderStepped:Connect(function()
+			-- Skip movement if typing in a TextBox
+			if UIS:GetFocusedTextBox() then return end
+
 			local move = Vector3.zero
 			if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
 			if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
@@ -84,7 +87,7 @@ end
 
 local jumpActive = false
 local jumpConn
-local canJump = true  -- Flag to prevent holding spacebar for continuous jumps
+local canJump = true
 
 local function toggleInfJump()
 	local plr = game.Players.LocalPlayer
@@ -95,18 +98,12 @@ local function toggleInfJump()
 			local humanoid = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 			if humanoid then
 				local state = humanoid:GetState()
-
-				-- Allow jumping if the humanoid is not already jumping or falling
 				if state == Enum.HumanoidStateType.Seated or state == Enum.HumanoidStateType.Climbing then
-					return  -- Prevent jumping while seated or climbing
+					return
 				end
-
-				-- Only trigger the jump if not already in mid-jump/falling (to avoid endless spamming)
 				if canJump then
 					humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 					canJump = false
-
-					-- Prevent another jump until cooldown finishes (0.1 sec is a reasonable cooldown)
 					wait(0.1)
 					canJump = true
 				end
